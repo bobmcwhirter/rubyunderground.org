@@ -1,0 +1,69 @@
+/* Welcome to Compass.
+ * In this file you should write your main styles. (or centralize your imports)
+ * Import this file using the following HTML or equivalent:
+ * <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css" /> */
+
+@import "compass/reset"
+@import "blueprint"
+
+body.bp
+  +blueprint-typography(true)
+  +blueprint-interaction
+  +blueprint-utilities
+  +blueprint-debug
+
+#container
+  +container
+
+#layout
+  #header
+    :margin-top 2em
+    :margin-bottom 2em
+    :border-bottom 2px solid #ccc
+    +column(24)
+    +last
+  #primary 
+    +push(2)
+    +column(16)
+  #sidebar
+    +column(6)
+    +last
+    :font-size 140%
+  #footer
+    :border-top 2px solid #ccc
+    :margin-top 2em
+    :margin-bottom 2em
+    +column(24)
+    +last
+
+body.bp
+  a
+    :text-decoration underline
+    :color #522
+    &:visited
+      :text-decoration underline
+      :color #311
+  p
+    :margin-bottom 1em
+    :line-height 1.4em
+  .post
+    :margin-bottom 1em
+    :border-bottom 1px solid #ccc
+    :padding-bottom 1em
+    h1
+      :font-size 240%
+      :font-weight bold
+    h2
+      :font-size 120%
+      :margin-bottom .1ex
+      :padding 0px
+      :line-height 1em
+    h3
+      :font-size 100%
+      :margin-bottom .1ex
+      :font-weight bold
+    .content
+      :font-size 120%
+      :margin-top 2em
+    .footer
+      :text-align right

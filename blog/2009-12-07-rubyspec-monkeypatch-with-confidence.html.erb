@@ -1,0 +1,21 @@
+---
+title: 'RubySpec: Monkeypatch with Confidence'
+author: 'Bob McWhirter'
+layout: post
+---
+<p>While the tagline of <a href='http://rubyspec.org/' title='RubySpec'>RubySpec</a> is actually "The Standard You Trust" it might as well be "Monkeypatch with Confidence".
+</p>
+<em>Here's the backstory:</em>
+<p>Building <a href='http://torquebox.org/' title='TorqueBox'>TorqueBox</a>, I ultimately wanted to be able to run a Ruby application from within a simple zip bundle of the app.  And handling everything that expects to be living in a relatively-addressable filesystem.  Not just <strong>require</strong> and <strong>load</strong>, but things like <strong>Dir['*.png']</strong> and <strong>File.stat(...)</strong>.
+</p>
+<p>Plus, JBoss (upon which TorqueBox is built) has this cool ability to think of a jar-within-a-jar-within-a-jar (or a Russian doll nesting of zip files) as still a simple directory-based filesystem.
+</p>
+<p>JRuby, though, isn't quite as swift, in terms of paths for standard core library things such as <strong>File</strong>, or <strong>Dir</strong>, or <strong>IO</strong>.
+</p>
+<p>To get this JBoss functionality (called <strong>VFS</strong> for <a href='http://java.dzone.com/news/jboss-virtual-file-system' title='JBoss VFS'>Virtual File-System</a>) exposed to any arbitrary Ruby code, I'm having to monkeypatch <strong>File</strong>, <strong>Dir</strong>, <strong>IO</strong> and other classes.
+</p>
+<p>For the most part, the rule for how these patches jack in is <em>"if this is a normal file/directory/io, let the normal core library handle it, otherwise, punt to VFS"</em>.
+</p>
+<p>Given this rule, with VFS turned on, all existing code that doesn't touch these zip/jar bundles should exhibit no regressions.  A great way to test that is using RubySpec.  I'm approaching this problem as treating JRuby-with-VFS as a new implementation of Ruby, to be tested alongside general JRuby support.  Enabling VFS should not cause JRuby to become any less compatible with the specs.
+</p>
+<p>Contributors to the VFS gem can now <a href='http://github.com/torquebox/torquebox/blob/master/vfs/README-RubySpec.txt' title='TorqueBox RubySpec README'>easily run the applicable RubySpecs against JRuby both with and without VFS enabled</a>.</p>

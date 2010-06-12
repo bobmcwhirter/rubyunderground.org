@@ -1,0 +1,11 @@
+---
+layout: base
+---
+.post
+  %h1 
+    %a{ :href=>page.url }= page.title
+  %h2= page.date.strftime( "%Y %B %d" )
+  %h3= page.author
+  .content
+    ~ page.content
+  .footer

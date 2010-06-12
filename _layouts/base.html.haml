@@ -1,0 +1,31 @@
+!!! XML
+!!!
+%html
+  %head
+    %title
+      An awesome site 
+    %link{ :rel=>'stylesheet', :type=>'text/css', :href=>'/stylesheets/screen.css', :media=>'screen, projection' }
+    %link{ :rel=>'stylesheet', :type=>'text/css', :href=>'/stylesheets/print.css', :media=>'print' }
+    /[if lt IE 8]
+      %link{ :rel=>'stylesheet', :type=>'text/css', :href=>'/stylesheets/ie.css', :media=>'screen, projection' }
+    %link{ :rel=>'alternate',  :type=>'application/atom+xml', :href=>'/blog.atom' }
+  %body.bp
+    #container
+      #layout
+        #header 
+          %a{:href=>'/'}
+            %img{:src=>'/images/logo.png'}
+        #primary
+          ~ content
+        #sidebar
+          %p
+            The
+            %b
+              Ruby Underground 
+            is a blog about doing unholy and
+            unnatural things using Ruby, Java, and other technologies.
+        #footer 
+          Copyright 2009-2010 by the individual contributors.  
+          Licensed under the 
+          %a{:href=>"http://creativecommons.org/"}
+            CC-SA license.

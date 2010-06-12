@@ -1,0 +1,73 @@
+---
+title: 'SWFUpload, Rails, REST, and Sessions'
+author: 'Bob McWhirter'
+layout: post
+---
+<p>To test TorqueBox, I'm always building little applications.
+</p>
+<p>My latest little application involved uploading a user avatar image, which my app, using <a href='http://github.com/thoughtbot/paperclip' title='paperclip on github'>Paperclip</a>, would shuffle to Amazon S3.
+</p>
+<p>Form uploads are cool, but AJAXy Flash uploads are cooler.  So I grabbed SWFUpload from the conveniently-named <a href='http://swfupload.org/' title='SWFUpload.org'>sfwupload.org</a>.
+</p>
+<p>Integrating it into my application was a slight challenge, alas.
+</p>
+<p>My <strong>User</strong> model directly holds the <strong>avatar_*</strong> columns Paperclip wants, in the form of
+</p>
+<ul>
+	<li>avatar_file_name</li>
+	<li>avatar_content_type</li>
+	<li>avatar_file_size</li>
+	<li>avatar_updated_at</li>
+</ul>
+<p>To my feeble mind, this seems like a <strong>PUT</strong> on an existing User resource, if I want to be RESTful.
+</p>
+<p>SWFUpload will gleefully do a <strong>POST</strong>, and I can add a <strong>_method=PUT</strong> to my parameters.  This is a concession Rails has made to the rest of the world, realizing that not everything supports every HTTP verb when you want it to.  So, Rails lets you do a <strong>POST</strong>, and tell it what verb you <em>really</em> meant through a parameter named <strong>_method</strong>.  Rails only respects <strong>_method</strong>, though, if it's in the <strong>POST</strong> parameters.  So I can't use the query-string to inject the psuedo <strong>PUT</strong> (or <strong>DELETE</strong> or ...).
+</p>
+<p>But SWFUpload (and most anything Flash) doesn't participate in the containing browser session.  It doesn't have my session cookie.  Or it doesn't send it, if it does. Without session information, the server doesn't really know who is sending this octet stream at the URL. So, how do I secure this update_user execution, if I can't pass a session cookie?
+</p>
+<p>SWFUpload has an extension to include every cookie as a parameter in the request.  It just adds name=value pairs for each cookie into the post parameters, alongside the <strong>_method</strong> and anything else you've specified.  So, if you had a cookie named <strong>session_id</strong>, it'd get added to the form paramters as <strong>session_id</strong>.
+</p>
+<p>But with TorqueBox, the Rack session piggybacks upon the Java Servlet session, which, unfortunately, doesn't know to inspect the POST parameters. By default, the servlet container is looking for a cookie.  I attempted to write a custom valve for the Tomcat request chain, but I only had reliable access to query parameters, not post parameters of the multipart form.
+</p>
+<p>This makes sense, since the <strong>POST</strong> body is conceivably large, and is 100% the responsibility of the application. App servers don't typically go mucking around in it on their own.  The application expects to be able to get an input stream for the POST body and ready starting from byte 0.  This means either massive buffering, or the simply that the app-server gives it to the app unmolested (and uninspected).
+</p>
+<p>And since Rails expects <strong>_method</strong> to be in the POST parameters, but session cookie information could only be inspected if present in the URL, I came to an impasse, I thought.
+</p>
+<p>To sum up:
+</p>
+<ul>
+	<li>Updating a User's avatar is a <strong>PUT</strong> request against the <strong>User</strong> resource</li>
+	<li>SWFUpload can only do a <strong>POST</strong></li>
+	<li>Rails lets us tunnel <strong>PUT</strong> through <strong>POST</strong> using <strong>_method=PUT</strong></li>
+	<li><strong>_method=PUT</strong> must be in the <strong>POST</strong> parameters, not URL bits.</li>
+	<li>SWFUpload can inject cookies request parameters.</li>
+	<li>SWFUpload can use either URL-based query parameters XOR <strong>POST</strong> parameters, but not both.</li>
+	<li>Session lookup can't take advantage of <strong>POST</strong> parameters, only URL bits.</li>
+</ul>
+<p>Though, without any other magic involved, our Java Servlet-based session can be divined by looking for a suffix on the URL of <strong>;jsessionid=&lt;id&gt;</strong>.
+</p>
+<p>For instance, you might have come across some Google-cached URLs such as
+</p>
+<ul>
+	<li>http://foo.com/products.jsp;jsessionid=918jk2j9j09j213</li>
+</ul>
+<p>That's the Java app-server's method of passing session cookie information via URL.
+</p>
+<p>It probably breaks 7 of the top 5 tenets of RESTful architectures, but it works.  If we can use this method for passing our session cookie during the upload, then we can successfully secure this interaction.
+</p>
+<p>Ultimately, SWFUpload does a <strong>POST</strong> to the User resource URL, with <strong>;jsession=&lt;id&gt;</strong> appended, and adds the <strong>_method=PUT</strong> to the <strong>POST</strong> parameters.  TorqueBox adds a <strong>url_suffix()</strong> method to the <strong>session</strong> object, which produces this full suffix.
+</p>
+<p>Similar to this:
+</p>
+<pre><code>
+$upload_control.swfupload({
+  upload_url: '#{url_for(user)}#{session.url_suffix}',
+  post_params: {
+    _method: 'PUT',
+    authenticity_token: '#{form_authenticity_token}',
+  },
+  use_query_string: false});
+</code></pre>
+<p>Now we successfully pass session information, use CSRF-protection, and still communicate with a nicely RESTful controller on the back-end.
+</p>
+<p>RESTful, Flashy, AJAXy, CSRF-protected and secure.  I'd call that a good day.</p>

@@ -1,0 +1,14 @@
+title: The Ruby Underground
+
+profiles:
+  development:
+#  staging:
+#    base_url: http://staging.awestruct.org/
+#    deploy:
+#      host: awestruct.org
+#      path: /var/www/domains/awestruct.org/staging/htdocs/ 
+  production:
+    base_url: http://rubyunderground.org/
+    deploy:
+      host: rubyunderground.org
+      path: /var/www/domains/rubyunderground.org/www/htdocs/ 
